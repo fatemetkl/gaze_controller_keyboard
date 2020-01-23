@@ -59,6 +59,8 @@ def letter(letter_index,text,light):
         x = 800
         y = 400
 
+
+
     width = 200
     height = 200
     th = 3  # thickness
