@@ -12,6 +12,8 @@ keyboard = np.zeros((1000, 1500, 3), np.uint8)
 keys_set_1 = {0: "Q", 1: "W", 2: "E", 3: "R", 4: "T",
               5: "A", 6: "S", 7: "D", 8: "F", 9: "G",
               10: "Z", 11: "X", 12: "C", 13: "V", 14: "B"}
+blinking_board=np.zeros((500,500),np.uint8)
+blinking_board[:]=255
 
 def midpoint(p1 ,p2):
     return int((p1.x + p2.x)/2), int((p1.y + p2.y)/2)
@@ -144,15 +146,15 @@ def get_gaze_ratio(eye_points,landmarks):
 #counters
 frames=0
 letter_index=0
-
+blinking=0
+text=""
 while True:
     _, frame = cap.read()
     frames+=1
     keyboard[:]=(0,0,0) # reset keyboard for update
-
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     new_frame = np.zeros((500, 500, 3), np.uint8)
-
+    active_letter=keys_set_1[letter_index]
     faces = detector(gray)
     for face in faces:
         landmarks = predictor(gray, face)
@@ -163,6 +165,14 @@ while True:
 
         if blinking_ratio > 5.7:
             cv2.putText(frame, "BLINKING", (50, 150), font, 7, (255, 0, 0))
+            blinking+=1
+            frames-=1
+            if blinking == 5:
+                text += active_letter
+        else:
+            blinking=0
+
+
 
         # Gaze rato left to write
         gaze_ratio_left_eye = get_gaze_ratio([36, 37, 38, 39, 40, 41], landmarks)
@@ -200,9 +210,12 @@ while True:
                 light = False
             letter(i, keys_set_1[i], light)
 
+        cv2.putText(blinking_board, text, (10, 100), font, 4, 0, 3)
+
         cv2.imshow("keyboard", keyboard)
-        cv2.imshow("new frame",new_frame)
-        cv2.imshow("Frame", frame)
+        cv2.imshow("blinking_board",blinking_board)
+        # cv2.imshow("new frame",new_frame)
+        # cv2.imshow("Frame", frame)
 
         key = cv2.waitKey(1)
         if key == 27:
